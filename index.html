@@ -72,6 +72,7 @@
   .eyebrow{font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
   .film h2{margin:14px 0 30px;font-weight:400;font-size:clamp(26px,3.4vw,40px);line-height:1.15;letter-spacing:-.02em;max-width:22ch}
   .film h2 span{color:var(--lime)}
+  .film .eyebrow{margin-bottom:18px}
   .frame{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#000;
     box-shadow:0 40px 120px -40px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.02) inset;aspect-ratio:16/9}
   .frame video{width:100%;height:100%;display:block;object-fit:cover;background:#000}
@@ -183,7 +184,6 @@
   <section class="film" id="film">
     <div class="wrap">
       <div class="eyebrow rv">The film · 1:47</div>
-      <h2 class="rv"><span>Entry</span> is building the operating system for corporate services.</h2>
       <div class="frame rv" id="frame">
         <video id="vid" preload="metadata" playsinline controls poster="poster.jpg">
           <source src="entry-film.mp4" type="video/mp4">
