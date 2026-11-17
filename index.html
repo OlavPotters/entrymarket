@@ -71,7 +71,8 @@
   .hero > .wrap{position:relative;z-index:1;width:100%}
   .hero-demo{display:none;position:absolute;z-index:0;pointer-events:none;left:max(56vw,calc(50% + 190px));top:50%;width:min(62vw,1080px);
     transform:translateY(-26%) perspective(1800px) rotateY(-18deg) rotateX(4deg);transform-origin:left center;
-    opacity:0;transition:opacity 1.8s ease}
+    opacity:0;transition:opacity .6s ease}
+  .hero-demo.on{transition:opacity 1.6s ease}
   .hero-demo.on{opacity:.55}
   .hero-demo .win{border-radius:14px;overflow:hidden;background:#0d1a19;border:1px solid rgba(231,232,234,.18);box-shadow:0 50px 120px rgba(0,0,0,.45)}
   .hero-demo .bar{height:30px;display:flex;align-items:center;gap:7px;padding:0 14px;background:rgba(255,255,255,.035);border-bottom:1px solid rgba(231,232,234,.08)}
@@ -377,8 +378,12 @@
     if(!window.matchMedia('(min-width:900px) and (prefers-reduced-motion:no-preference)').matches) return;
     const v=box.querySelector('video');
     let seen=false; try{seen=sessionStorage.getItem('entryIntro')==='1'}catch(_){}
-    setTimeout(()=>{ v.src='demo-window.mp4'; v.play().then(()=>box.classList.add('on')).catch(()=>{}); }, seen?500:2400);
-    new IntersectionObserver(es=>es.forEach(e=>{ if(!v.getAttribute('src')) return; e.isIntersecting?v.play().catch(()=>{}):v.pause(); }),{threshold:0}).observe(box);
+    /* fade out as soon as the visitor scrolls; back when at the top again */
+    let ready=false, raf=0;
+    function sync(){ raf=0; if(!ready) return; const top=window.scrollY<40;
+      box.classList.toggle('on',top); if(top) v.play().catch(()=>{}); else setTimeout(()=>{ if(window.scrollY>=40) v.pause(); },700); }
+    window.addEventListener('scroll',()=>{ if(!raf) raf=requestAnimationFrame(sync); },{passive:true});
+    setTimeout(()=>{ v.src='demo-app.mp4'; v.play().then(()=>{ ready=true; sync(); }).catch(()=>{}); }, seen?500:2400);
   })();
 
   /* film */
@@ -394,9 +399,10 @@
   /* autoplay muted when the film is in view */
   if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)){
     new IntersectionObserver(es=>es.forEach(x=>{
-      if(x.isIntersecting&&x.intersectionRatio>=.5){ if(vid.paused&&!userSound){vid.muted=true;frame.classList.add('muted');vid.play().catch(()=>frame.classList.remove('muted'));} }
+      const need=Math.min(.95,(innerHeight*.95)/Math.max(1,x.boundingClientRect.height));
+      if(x.isIntersecting&&x.intersectionRatio>=need-.01){ if(vid.paused&&!userSound){vid.muted=true;frame.classList.add('muted');vid.play().catch(()=>frame.classList.remove('muted'));} }
       else if(x.intersectionRatio<.2&&!vid.paused){vid.pause();}
-    }),{threshold:[0,.2,.5,.8]}).observe(frame);
+    }),{threshold:Array.from({length:21},(_,i)=>i/20)}).observe(frame);
   }
 
   /* reveal */
