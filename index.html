@@ -383,7 +383,7 @@
     function sync(){ raf=0; if(!ready) return; const top=window.scrollY<40;
       box.classList.toggle('on',top); if(top) v.play().catch(()=>{}); else setTimeout(()=>{ if(window.scrollY>=40) v.pause(); },700); }
     window.addEventListener('scroll',()=>{ if(!raf) raf=requestAnimationFrame(sync); },{passive:true});
-    setTimeout(()=>{ v.src='demo-app.mp4'; v.play().then(()=>{ ready=true; sync(); }).catch(()=>{}); }, seen?500:2400);
+    setTimeout(()=>{ v.src='demo-app%20(1).mp4'; v.play().then(()=>{ ready=true; sync(); }).catch(()=>{}); }, seen?500:2400);
   })();
 
   /* film */
