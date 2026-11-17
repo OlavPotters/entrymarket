@@ -113,6 +113,20 @@
   form.sent{display:none}
   form.sent + .ok{display:block}
   .hp{display:none}
+  form .btn[disabled]{opacity:.6;cursor:progress}
+
+  /* confirmation modal */
+  .modal{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:24px;
+    background:rgba(8,22,21,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s}
+  .modal.open{opacity:1;visibility:visible}
+  .modal-box{width:100%;max-width:440px;background:var(--bg);border:1px solid var(--line2);border-radius:20px;padding:36px 32px 30px;text-align:center;
+    box-shadow:0 30px 80px rgba(0,0,0,.45);transform:translateY(12px) scale(.98);transition:transform .35s ease}
+  .modal.open .modal-box{transform:none}
+  .modal-check{width:56px;height:56px;margin:0 auto 20px;border-radius:50%;background:var(--lime);display:flex;align-items:center;justify-content:center}
+  .modal-check svg{width:26px;height:26px}
+  .modal h4{font-size:22px;font-weight:700;letter-spacing:-.01em}
+  .modal p{margin-top:10px;color:var(--muted);font-size:15px;line-height:1.55}
+  .modal .btn{margin-top:26px;min-width:140px;height:46px}
 
   /* footer */
   footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--dim);font-size:13px}
@@ -218,7 +232,7 @@
           </div>
           <p class="note">We only use your email to tell you about Entry's launch.</p>
         </form>
-        <div class="ok" role="status">Thanks — you're on the list. We'll be in touch when Entry launches.</div>
+        <div class="ok" role="status">Thank you — you're on the list. We'll be in touch as soon as Entry launches.</div>
       </div>
 
       <div class="card rv" id="investors">
@@ -234,24 +248,56 @@
           </div>
           <button class="btn btn-ghost" type="submit">Request pitch deck</button>
         </form>
-        <div class="ok" role="status">Thank you. We'll review your request and send the pitch deck shortly.</div>
+        <div class="ok" role="status">Thank you — request received. A member of our team will be in touch shortly.</div>
       </div>
     </div>
   </section>
 </main>
 
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
+  <div class="modal-box">
+    <div class="modal-check"><svg viewBox="0 0 24 24" fill="none" stroke="#1b3f3e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h4 id="modal-title"></h4>
+    <p id="modal-text"></p>
+    <button class="btn btn-lime" type="button" data-close>Close</button>
+  </div>
+</div>
+
 <footer>
   <div class="wrap">
     <span>© 2026 Entry. All rights reserved.</span>
-    <a href="mailto:info@entrymarket.com">info@entrymarket.com</a>
+    <a href="mailto:hello@entrymarket.com">hello@entrymarket.com</a>
   </div>
 </footer>
 
 <script>
-  /* Form handling: set FORM_ENDPOINT to a Formspree / WordPress / webhook URL.
-     Without an endpoint the form opens a pre-filled email to info@entrymarket.com. */
-  const FORM_ENDPOINT = "";
-  const CONTACT = "info@entrymarket.com";
+  /* Form handling via FormSubmit (formsubmit.co) -> hello@entrymarket.com.
+     If the service is unreachable, falls back to a pre-filled email. */
+  const CONTACT = "hello@entrymarket.com";
+  const FORM_ENDPOINT = "https://formsubmit.co/ajax/" + CONTACT;
+  const MSG = {
+    "Waitlist": ["You're on the list",
+      "Thank you for your interest in Entry. We'll keep you informed and let you know as soon as we launch."],
+    "Investor request": ["Request received",
+      "Thank you for your interest in Entry. A member of our team will review your request and be in touch shortly."]
+  };
+
+  const modal=document.getElementById('modal');
+  let lastFocus=null;
+  function openModal(kind){
+    const [t,x]=MSG[kind]||["Thank you","We'll be in touch shortly."];
+    document.getElementById('modal-title').textContent=t;
+    document.getElementById('modal-text').textContent=x;
+    lastFocus=document.activeElement;
+    modal.classList.add('open');modal.setAttribute('aria-hidden','false');
+    modal.querySelector('[data-close]').focus();
+  }
+  function closeModal(){
+    modal.classList.remove('open');modal.setAttribute('aria-hidden','true');
+    if(lastFocus&&lastFocus.focus) lastFocus.focus();
+  }
+  modal.addEventListener('click',e=>{if(e.target===modal||e.target.hasAttribute('data-close')) closeModal();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open')) closeModal();});
 
   document.querySelectorAll('form[data-kind]').forEach(f=>{
     f.addEventListener('submit', async e=>{
@@ -261,16 +307,23 @@
       if (bad){bad.focus();bad.style.borderColor='#ff8a7a';setTimeout(()=>bad.style.borderColor='',1800);return;}
       const data={kind:f.dataset.kind};
       f.querySelectorAll('input[name]:not(.hp)').forEach(i=>data[i.name]=i.value.trim());
-      if (FORM_ENDPOINT){
-        try{
-          const r=await fetch(FORM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(data)});
-          if(!r.ok) throw 0;
-        }catch(_){alert('Something went wrong. Please email '+CONTACT);return;}
-      } else {
+      const btn=f.querySelector('button[type=submit]'), label=btn.textContent;
+      btn.disabled=true;btn.textContent='Sending…';
+      let ok=false;
+      try{
+        const r=await fetch(FORM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
+          body:JSON.stringify(Object.assign({_subject:'Entry website — '+data.kind,_template:'table',_captcha:'false'},data))});
+        const j=await r.json().catch(()=>({}));
+        ok=r.ok&&(j.success===true||j.success==='true');
+      }catch(_){}
+      btn.disabled=false;btn.textContent=label;
+      if(!ok){
         const body=Object.entries(data).map(([k,v])=>k+': '+v).join('\n');
         location.href='mailto:'+CONTACT+'?subject='+encodeURIComponent('Entry — '+data.kind)+'&body='+encodeURIComponent(body);
+        return;
       }
       f.classList.add('sent');
+      openModal(data.kind);
     });
   });
 
