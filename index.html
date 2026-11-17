@@ -123,9 +123,11 @@
   .note{margin-top:14px;font-size:12px;color:var(--dim)}
   .note a{color:inherit;text-decoration:underline;text-decoration-color:rgba(134,160,159,.45);text-underline-offset:2px}
   .note a:hover{color:var(--muted)}
-  .ok{display:none;margin-top:22px;padding:14px 16px;border-radius:12px;border:1px solid var(--lime-soft);color:var(--lime);font-size:14px}
+  .ok{display:none;align-items:flex-start;gap:12px;margin-top:22px;padding:16px 18px;border-radius:14px;background:rgba(210,251,2,.07);border:1px solid var(--lime-soft);color:var(--text);font-size:14px;line-height:1.55}
+  .ok i{flex:none;width:22px;height:22px;margin-top:1px;border-radius:50%;background:var(--lime);display:flex;align-items:center;justify-content:center}
+  .ok i svg{width:12px;height:12px}
   form.sent{display:none}
-  form.sent + .ok{display:block}
+  form.sent + .ok{display:flex}
   .hp{display:none}
   form .btn[disabled]{opacity:.6;cursor:progress}
 
@@ -250,7 +252,7 @@
           </div>
           <p class="note">We only use your email to tell you about Entry's launch. <a href="/privacy.html">Privacy</a></p>
         </form>
-        <div class="ok" role="status">Thank you — you're on the list. We'll be in touch as soon as Entry launches.</div>
+        <div class="ok" role="status"><i aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1b3f3e" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i><span>Thank you — you're on the list. We'll be in touch as soon as Entry launches.</span></div>
       </div>
 
       <div class="card rv" id="investors">
@@ -267,7 +269,7 @@
           <button class="btn btn-ghost" type="submit">Request pitch deck</button>
           <p class="note">We only use these details to respond to your request. <a href="/privacy.html">Privacy</a></p>
         </form>
-        <div class="ok" role="status">Thank you — request received. A member of our team will be in touch shortly.</div>
+        <div class="ok" role="status"><i aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#1b3f3e" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i><span>Thank you — request received. A member of our team will be in touch shortly.</span></div>
       </div>
     </div>
   </section>
@@ -323,6 +325,7 @@
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open')) closeModal();});
 
   document.querySelectorAll('form[data-kind]').forEach(f=>{
+    try{ if(localStorage.getItem('entrySent:'+f.dataset.kind)) f.classList.add('sent'); }catch(_){}
     f.addEventListener('submit', async e=>{
       e.preventDefault();
       if (f.querySelector('.hp').value) return;
@@ -346,6 +349,7 @@
         return;
       }
       f.classList.add('sent');
+      try{ localStorage.setItem('entrySent:'+data.kind,'1'); }catch(_){}
       openModal(data.kind);
     });
   });
