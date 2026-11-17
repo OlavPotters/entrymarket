@@ -274,7 +274,8 @@
   /* Form handling via FormSubmit (formsubmit.co) -> hello@entrymarket.com.
      If the service is unreachable, falls back to a pre-filled email. */
   const CONTACT = "hello@entrymarket.com";
-  const FORM_ENDPOINT = "https://formsubmit.co/ajax/" + CONTACT;
+  /* Temporary: deliver to olav@ (cc hello@) until hello@ accepts external senders. */
+  const FORM_ENDPOINT = "https://formsubmit.co/ajax/olav@entrymarket.com";
   const MSG = {
     "Waitlist": ["You're on the list",
       "Thank you for your interest in Entry. We'll keep you informed and let you know as soon as we launch."],
@@ -312,7 +313,7 @@
       let ok=false;
       try{
         const r=await fetch(FORM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
-          body:JSON.stringify(Object.assign({_subject:'Entry website — '+data.kind,_template:'table',_captcha:'false'},data))});
+          body:JSON.stringify(Object.assign({_subject:'Entry website — '+data.kind,_template:'table',_captcha:'false',_cc:CONTACT+',boudewijn@entrymarket.com'},data))});
         const j=await r.json().catch(()=>({}));
         ok=r.ok&&(j.success===true||j.success==='true');
       }catch(_){}
