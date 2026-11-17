@@ -68,6 +68,22 @@
 
   /* hero */
   .hero{min-height:calc(100svh - 98px);display:flex;flex-direction:column;justify-content:center;padding:40px 0 110px;position:relative}
+  .hero > .wrap{position:relative;z-index:1;width:100%}
+  .hero-demo{display:none;position:absolute;z-index:0;pointer-events:none;left:max(56vw,calc(50% + 190px));top:50%;width:min(62vw,1080px);
+    transform:translateY(-26%) perspective(1800px) rotateY(-18deg) rotateX(4deg);transform-origin:left center;
+    opacity:0;transition:opacity 1.8s ease}
+  .hero-demo.on{opacity:.55}
+  .hero-demo .win{border-radius:14px;overflow:hidden;background:#0d1a19;border:1px solid rgba(231,232,234,.18);box-shadow:0 50px 120px rgba(0,0,0,.45)}
+  .hero-demo .bar{height:30px;display:flex;align-items:center;gap:7px;padding:0 14px;background:rgba(255,255,255,.035);border-bottom:1px solid rgba(231,232,234,.08)}
+  .hero-demo .bar i{width:9px;height:9px;border-radius:50%;background:rgba(231,232,234,.22)}
+  .hero-demo video{display:block;width:100%;aspect-ratio:1280/654;object-fit:cover}
+  @media (min-width:900px) and (prefers-reduced-motion:no-preference){
+    .hero-demo{display:block}
+    .hero h1{font-size:clamp(46px,5.4vw,84px)}
+  }
+  @media (min-width:1600px) and (prefers-reduced-motion:no-preference){
+    .hero-demo{left:calc(50% + 270px)}
+  }
   .scrollcue{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
   .scrollcue i{display:block;width:1px;height:38px;background:linear-gradient(180deg,var(--lime),transparent);animation:cue 2.2s ease-in-out infinite;transform-origin:top}
   @keyframes cue{0%{transform:scaleY(0);opacity:0}30%{opacity:1}100%{transform:scaleY(1);opacity:0}}
@@ -213,6 +229,7 @@
 
 <main id="top">
   <section class="hero">
+    <div class="hero-demo" aria-hidden="true"><div class="win"><div class="bar"><i></i><i></i><i></i></div><video muted loop playsinline preload="none" disablepictureinpicture></video></div></div>
     <div class="wrap">
       <div class="pill rv"><span class="dot"></span>Launching soon</div>
       <h1 class="rv">Corporate Services,<br><em>rebuilt.</em></h1>
@@ -353,6 +370,16 @@
       openModal(data.kind);
     });
   });
+
+  /* product window behind the hero (desktop, motion allowed) */
+  (function(){
+    const box=document.querySelector('.hero-demo'); if(!box) return;
+    if(!window.matchMedia('(min-width:900px) and (prefers-reduced-motion:no-preference)').matches) return;
+    const v=box.querySelector('video');
+    let seen=false; try{seen=sessionStorage.getItem('entryIntro')==='1'}catch(_){}
+    setTimeout(()=>{ v.src='demo-window.mp4'; v.play().then(()=>box.classList.add('on')).catch(()=>{}); }, seen?500:2400);
+    new IntersectionObserver(es=>es.forEach(e=>{ if(!v.getAttribute('src')) return; e.isIntersecting?v.play().catch(()=>{}):v.pause(); }),{threshold:0}).observe(box);
+  })();
 
   /* film */
   const vid=document.getElementById('vid'), frame=document.getElementById('frame');
