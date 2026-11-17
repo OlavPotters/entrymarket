@@ -355,12 +355,12 @@
       btn.disabled=true;btn.textContent='Sending…';
       let ok=false;
       /* FormSubmit sometimes answers slowly although the mail is already sent:
-         after 3 s without an answer we treat it as received instead of hanging. */
+         after 2 s without an answer we treat it as received instead of hanging. */
       const send=fetch(FORM_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
           body:JSON.stringify(Object.assign({_subject:'Entry website — '+data.kind,_template:'table',_captcha:'false'},data))})
         .then(async r=>{ const j=await r.json().catch(()=>({})); return r.ok&&(j.success===true||j.success==='true'); })
         .catch(()=>false);
-      ok=await Promise.race([send, new Promise(res=>setTimeout(()=>res(true),3000))]);
+      ok=await Promise.race([send, new Promise(res=>setTimeout(()=>res(true),2000))]);
       btn.disabled=false;btn.textContent=label;
       if(!ok){
         const body=Object.entries(data).map(([k,v])=>k+': '+v).join('\n');
